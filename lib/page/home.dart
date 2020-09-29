@@ -238,11 +238,12 @@ class _HomePageState extends State<HomePage> {
                                 UiData.themeMaterialColor,
                                 Colors.white,
                                 'จุดประสงค์การเรียนรู้',
-                                () => {
-                                  Navigator.pushNamed(
+                                () async => {
+                                  await Navigator.pushNamed(
                                     context,
                                     UiData.objectiveTag,
                                   ),
+                                  await initialReadIdContent(),
                                 },
                                 image: 'assets/images/44126.png',
                               ),
@@ -274,7 +275,7 @@ class _HomePageState extends State<HomePage> {
                                       _listReadIdContent,
                                     );
 
-                                    initialReadIdContent();
+                                    await initialReadIdContent();
                                   },
                                   image: 'assets/images/5946.png',
                                 ),

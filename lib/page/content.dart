@@ -468,10 +468,8 @@ class _ContentPageState extends State<ContentPage>
                               fontWeight: FontWeight.normal),
                         ),
                         onPressed: () => {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            UiData.homeTag,
-                          ),
+                          Navigator.of(context)
+                              .popUntil((route) => route.isFirst),
                         },
                       ),
                     ),

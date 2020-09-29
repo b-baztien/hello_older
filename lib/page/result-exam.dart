@@ -255,11 +255,14 @@ class _ResultExamPageState extends State<ResultExamPage> {
                     ),
                     onPressed: () => {
                       onSaveScoreFn(),
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        UiData.homeTag,
-                        ModalRoute.withName(UiData.homeTag),
-                      ),
+                      _score.topicScore == 'แบบทดสอบก่อนเรียน'
+                          ? Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              UiData.homeTag,
+                              ModalRoute.withName(UiData.homeTag),
+                            )
+                          : Navigator.of(context)
+                              .popUntil((route) => route.isFirst),
                     },
                   ),
                 ),
