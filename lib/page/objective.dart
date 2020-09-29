@@ -16,16 +16,20 @@ class _ObjectivePageState extends State<ObjectivePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String _name;
+  bool _isFirstTime;
+
   @override
   void initState() {
     super.initState();
-    initialUserName();
+    initialData();
   }
 
-  initialUserName() async {
+  initialData() async {
     String name = await UiData.getUserName();
+    bool isFirstTime = await UiData.isFirstTimeExam();
     setState(() {
       _name = name;
+      _isFirstTime = isFirstTime;
     });
   }
 
@@ -43,22 +47,25 @@ class _ObjectivePageState extends State<ObjectivePage> {
     if (_name != null) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString(UiData.nameKey, _name);
-
-      Score _score = new Score(
-        topicScore: 'แบบทดสอบก่อนเรียน',
-        score: 0,
-        saveScoreFn: (int score) async {
-          SharedPreferences sharedPreferences =
-              await SharedPreferences.getInstance();
-          sharedPreferences.setInt(UiData.preTestScoreKey, score);
-          sharedPreferences.setBool(UiData.postTestedKey, false);
-        },
-      );
-
-      Navigator.pushNamedAndRemoveUntil(
-          context, UiData.examTag, ModalRoute.withName(UiData.examTag),
-          arguments: _score);
+      goToPreTest();
     }
+  }
+
+  goToPreTest() {
+    Score _score = new Score(
+      topicScore: 'แบบทดสอบก่อนเรียน',
+      score: 0,
+      saveScoreFn: (int score) async {
+        SharedPreferences sharedPreferences =
+            await SharedPreferences.getInstance();
+        sharedPreferences.setInt(UiData.preTestScoreKey, score);
+        sharedPreferences.setBool(UiData.postTestedKey, false);
+      },
+    );
+
+    Navigator.pushNamedAndRemoveUntil(
+        context, UiData.examTag, ModalRoute.withName(UiData.examTag),
+        arguments: _score);
   }
 
   Future<void> editNameDilog(BuildContext context) async {
@@ -77,7 +84,7 @@ class _ObjectivePageState extends State<ObjectivePage> {
     if (newName != null) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString(UiData.nameKey, newName);
-      await initialUserName();
+      await initialData();
 
       _scaffoldKey.currentState.hideCurrentSnackBar();
 
@@ -183,12 +190,14 @@ class _ObjectivePageState extends State<ObjectivePage> {
                       ),
                       color: UiData.themeColor,
                       icon: Icon(
-                        _name == null ? Icons.done : Icons.home,
+                        _name == null || _isFirstTime ? Icons.done : Icons.home,
                         color: Colors.white,
                         size: 25,
                       ),
                       label: Text(
-                        _name == null ? 'เข้าใจแล้ว' : 'กลับหน้าหลัก',
+                        _name == null || _isFirstTime
+                            ? 'เข้าใจแล้ว'
+                            : 'กลับหน้าหลัก',
                         style: TextStyle(
                             fontSize: 16,
                             color: Colors.white,
@@ -198,6 +207,10 @@ class _ObjectivePageState extends State<ObjectivePage> {
                         if (_name == null)
                           {
                             createAlertDialog(context),
+                          }
+                        else if (_isFirstTime)
+                          {
+                            goToPreTest(),
                           }
                         else
                           {

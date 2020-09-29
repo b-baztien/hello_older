@@ -87,7 +87,7 @@ class UiData {
   static Future<bool> isFirstTimeExam() async {
     SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
     bool isFirstTimeExam = sharedPrefs.getBool(firstTimeKey);
-    return isFirstTimeExam != null ? isFirstTimeExam : false;
+    return isFirstTimeExam != null ? isFirstTimeExam : true;
   }
 
   static Future<int> getPretestScore() async {

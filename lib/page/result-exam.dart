@@ -18,13 +18,15 @@ class _ResultExamPageState extends State<ResultExamPage> {
 
   String _name = '';
   Score _score;
-  int _pretestScore = 0;
+  int _pretestScore;
   bool _isPostTested;
+  bool _firstTime;
 
   @override
   void initState() {
     super.initState();
     initialUserName();
+    initialIsFirstTimeExam();
     initialIsPostTested();
   }
 
@@ -32,6 +34,13 @@ class _ResultExamPageState extends State<ResultExamPage> {
     String name = await UiData.getUserName();
     setState(() {
       _name = name;
+    });
+  }
+
+  initialIsFirstTimeExam() async {
+    bool isFirstTime = await UiData.isFirstTimeExam();
+    setState(() {
+      _firstTime = isFirstTime;
     });
   }
 
@@ -49,8 +58,6 @@ class _ResultExamPageState extends State<ResultExamPage> {
     setState(() {
       _pretestScore = pretestScore;
     });
-
-    onSaveScoreFn();
   }
 
   Future<void> createAlertDialog(BuildContext context) async {
@@ -166,7 +173,10 @@ class _ResultExamPageState extends State<ResultExamPage> {
                         style: TextStyle(fontSize: 20.0),
                       ),
                       Visibility(
-                        visible: _isPostTested != null && !_isPostTested,
+                        visible: _firstTime != null &&
+                            !_firstTime &&
+                            _isPostTested != null &&
+                            !_isPostTested,
                         child: Column(
                           children: [
                             SizedBox(
@@ -195,21 +205,23 @@ class _ResultExamPageState extends State<ResultExamPage> {
                             SizedBox(
                               height: 20.0,
                             ),
-                            StyledText(
-                              text: _score.score == _pretestScore
-                                  ? 'คะแนนของคุณ<underline><blue>ไม่เปลี่ยนแปลง</blue></underline>จากก่อนเรียน'
-                                  : _score.score > _pretestScore
-                                      ? 'คะแนนของคุณ<underline><green>เพิ่มขึ้น</green></underline>จากก่อนเรียน <green>${_score.score - _pretestScore}</green> คะแนน'
-                                      : 'คะแนนของคุณ<underline><red>ลดลง</red></underline>จากก่อนเรียน <red>${_pretestScore - _score.score}</red> คะแนน',
-                              textAlign: TextAlign.center,
-                              newLineAsBreaks: true,
-                              style: TextStyle(
-                                fontSize: 20.0,
-                                color: Colors.black87,
-                                fontFamily: UiData.fontFamily,
-                              ),
-                              styles: UiData.styleText,
-                            ),
+                            _pretestScore != null
+                                ? StyledText(
+                                    text: _score.score == _pretestScore
+                                        ? 'คะแนนของคุณ<underline><blue>ไม่เปลี่ยนแปลง</blue></underline>จากก่อนเรียน'
+                                        : _score.score > _pretestScore
+                                            ? 'คะแนนของคุณ<underline><green>เพิ่มขึ้น</green></underline>จากก่อนเรียน <green>${_score.score - _pretestScore}</green> คะแนน'
+                                            : 'คะแนนของคุณ<underline><red>ลดลง</red></underline>จากก่อนเรียน <red>${_pretestScore - _score.score}</red> คะแนน',
+                                    textAlign: TextAlign.center,
+                                    newLineAsBreaks: true,
+                                    style: TextStyle(
+                                      fontSize: 20.0,
+                                      color: Colors.black87,
+                                      fontFamily: UiData.fontFamily,
+                                    ),
+                                    styles: UiData.styleText,
+                                  )
+                                : SizedBox.shrink(),
                           ],
                         ),
                       ),
@@ -242,6 +254,7 @@ class _ResultExamPageState extends State<ResultExamPage> {
                           fontWeight: FontWeight.normal),
                     ),
                     onPressed: () => {
+                      onSaveScoreFn(),
                       Navigator.pushNamedAndRemoveUntil(
                         context,
                         UiData.homeTag,

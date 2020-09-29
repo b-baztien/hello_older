@@ -153,7 +153,6 @@ class _TakeExamPageState extends State<TakeExamPage> {
                                         onChanged: (value) {
                                           setState(() {
                                             _listAnswer[_choiceNo - 1] = value;
-                                            print(value);
                                           });
                                         }),
                                   )

@@ -17,7 +17,11 @@ class _LandingPageState extends State<LandingPage> {
   _loadFirstTimeAppOpen() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String name = prefs.getString(UiData.nameKey);
-    if (name != null && name.isNotEmpty) {
+    bool isFirstTime = prefs.getBool(UiData.firstTimeKey);
+    if (name != null &&
+        isFirstTime != null &&
+        name.isNotEmpty &&
+        !isFirstTime) {
       // Not first time
       Navigator.pushNamedAndRemoveUntil(
         context,
