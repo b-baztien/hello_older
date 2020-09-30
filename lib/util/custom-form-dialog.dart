@@ -64,10 +64,14 @@ class _CustomFormDialogState extends State<CustomFormDialog> {
                       labelText: widget.labelText,
                       floatingLabelBehavior: FloatingLabelBehavior.auto),
                   initialValue: widget.initInput,
+                  maxLength: 10,
                   autofocus: true,
                   validator: (String input) {
                     if (input.isEmpty) {
                       return 'กรุณากรอกชื่อ';
+                    }
+                    if (input.length > 10) {
+                      return 'ชื่อต้องมีความยาวไม่เกิน 10 ตัวอักษร';
                     }
                     return null;
                   },
