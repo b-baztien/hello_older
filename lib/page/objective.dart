@@ -89,7 +89,7 @@ class _ObjectivePageState extends State<ObjectivePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  UsernameWidget(),
+                  UsernameWidget(_scaffoldKey),
                   Expanded(
                     flex: 2,
                     child: Container(

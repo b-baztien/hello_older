@@ -14,6 +14,8 @@ class ResultExamPage extends StatefulWidget {
 }
 
 class _ResultExamPageState extends State<ResultExamPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   String _name = '';
   Score _score;
   int _pretestScore;
@@ -77,7 +79,7 @@ class _ResultExamPageState extends State<ResultExamPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              UsernameWidget(),
+              UsernameWidget(_scaffoldKey),
               Flexible(
                 flex: 2,
                 child: Container(
@@ -195,14 +197,11 @@ class _ResultExamPageState extends State<ResultExamPage> {
                     ),
                     onPressed: () => {
                       onSaveScoreFn(),
-                      _score.topicScore == 'แบบทดสอบก่อนเรียน'
-                          ? Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              UiData.homeTag,
-                              ModalRoute.withName(UiData.homeTag),
-                            )
-                          : Navigator.of(context)
-                              .popUntil((route) => route.isFirst),
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        UiData.homeTag,
+                        ModalRoute.withName(UiData.homeTag),
+                      ),
                     },
                   ),
                 ),

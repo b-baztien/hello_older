@@ -19,6 +19,8 @@ class _ReferencePageState extends State<ReferencePage> {
 
   @override
   Widget build(BuildContext context) {
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       body: Container(
@@ -36,7 +38,7 @@ class _ReferencePageState extends State<ReferencePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  UsernameWidget(),
+                  UsernameWidget(_scaffoldKey),
                   Expanded(
                     flex: 2,
                     child: Container(

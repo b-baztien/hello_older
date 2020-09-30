@@ -161,7 +161,7 @@ class _ContentPageState extends State<ContentPage>
             children: [
               Column(
                 children: [
-                  UsernameWidget(),
+                  UsernameWidget(_scaffoldKey),
                   Expanded(
                     flex: 4,
                     child: Padding(

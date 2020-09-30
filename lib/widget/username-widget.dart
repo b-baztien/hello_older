@@ -6,15 +6,16 @@ import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 
 // ignore: must_be_immutable
 class UsernameWidget extends StatefulWidget {
+  final GlobalKey<ScaffoldState> _scaffoldKey;
   Color fontColor = Colors.black87;
-  UsernameWidget({this.fontColor});
+  UsernameWidget(this._scaffoldKey, {this.fontColor});
 
   @override
   _UsernameWidgetState createState() => _UsernameWidgetState();
 }
 
 class _UsernameWidgetState extends State<UsernameWidget> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  // final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
     return PreferenceBuilder<String>(
@@ -65,9 +66,9 @@ class _UsernameWidgetState extends State<UsernameWidget> {
     if (newName != null) {
       PreferenceSettings.setUserNameStream(newName);
 
-      _scaffoldKey.currentState.hideCurrentSnackBar();
+      widget._scaffoldKey.currentState.hideCurrentSnackBar();
 
-      _scaffoldKey.currentState.showSnackBar(
+      widget._scaffoldKey.currentState.showSnackBar(
         UiData.successSnackBar(
             oldName == null ? 'เพิ่มชื่อสำเร็จแล้ว' : 'แก้ไขชื่อสำเร็จแล้ว'),
       );

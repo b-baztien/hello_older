@@ -101,6 +101,7 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           UsernameWidget(
+            _scaffoldKey,
             fontColor: Colors.white,
           ),
         ],

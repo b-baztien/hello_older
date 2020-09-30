@@ -55,7 +55,7 @@ class _ExamPageState extends State<ExamPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  UsernameWidget(),
+                  UsernameWidget(_scaffoldKey),
                   Expanded(
                     flex: 2,
                     child: Container(

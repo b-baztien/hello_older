@@ -12,6 +12,8 @@ class TeamPage extends StatefulWidget {
 }
 
 class _TeamPageState extends State<TeamPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +38,7 @@ class _TeamPageState extends State<TeamPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  UsernameWidget(),
+                  UsernameWidget(_scaffoldKey),
                   Expanded(
                     flex: 2,
                     child: Container(
