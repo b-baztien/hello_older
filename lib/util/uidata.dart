@@ -10,7 +10,8 @@ import 'package:hello_older/page/result-exam.dart';
 import 'package:hello_older/page/splash.dart';
 import 'package:hello_older/page/take-exam.dart';
 import 'package:hello_older/page/team.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/util/preference-setting.dart';
+import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 import 'package:styled_text/styled_text.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -72,40 +73,6 @@ class UiData {
     'red': TextStyle(color: Colors.red),
     'blue': TextStyle(color: Colors.blue),
   };
-
-  static String nameKey = 'name';
-  static String firstTimeKey = 'first_time';
-  static String preTestScoreKey = 'pre-test_score';
-  static String postTestedKey = 'post-tested';
-  static String readContentIdKey = 'read_content_id';
-
-  static Future<String> getUserName() async {
-    SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
-    return sharedPrefs.getString(nameKey);
-  }
-
-  static Future<bool> isFirstTimeExam() async {
-    SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
-    bool isFirstTimeExam = sharedPrefs.getBool(firstTimeKey);
-    return isFirstTimeExam != null ? isFirstTimeExam : true;
-  }
-
-  static Future<int> getPretestScore() async {
-    SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
-    return sharedPrefs.getInt(preTestScoreKey);
-  }
-
-  static Future<bool> isPostTested() async {
-    SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
-    bool isPostTest = sharedPrefs.getBool(postTestedKey);
-    return isPostTest;
-  }
-
-  static Future<Set<String>> getReadContent() async {
-    SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
-    List<String> _listTemp = sharedPrefs.getStringList(readContentIdKey);
-    return _listTemp == null ? new Set() : _listTemp.toSet();
-  }
 
   static SnackBar successSnackBar(
     String message, {
@@ -241,8 +208,8 @@ class UiData {
             '\t<bullet-stroke>\u2022</bullet-stroke><bold-title>\tช่วงอายุ 70 ปี ขึ้นไป</bold-title> เป็นช่วงวัยเพื่อการพักผ่อนและท่องเที่ยว ควรแบ่งเงินออมไม่ต่ำกว่า 25 % ของรายได้'),
   ];
 
-  static Future<void> contentBottomSheet(BuildContext context,
-      List<ContentData> listContent, Set<String> readIdContents,
+  static Future<void> contentBottomSheet(
+      BuildContext context, List<ContentData> listContent,
       {String activeId, bool canPop: true, bool hasTransition: true}) async {
     await showModalBottomSheet(
       isScrollControlled: true,
@@ -255,179 +222,198 @@ class UiData {
       ),
       enableDrag: true,
       builder: (BuildContext bc) {
-        return Container(
-          padding: EdgeInsets.only(
-            top: 20.0,
-            left: 8.0,
-            right: 8.0,
-            bottom: 8.0,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height / 1.5,
-            ),
-            child: SingleChildScrollView(
-              child: SafeArea(
-                child: Wrap(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: 8.0,
-                        right: 8.0,
-                      ),
-                      child: Stack(
-                        children: [
-                          Align(
-                            heightFactor: 1.5,
-                            alignment: Alignment.center,
-                            child: Text(
-                              'เนื้อหา',
-                              style: TextStyle(
-                                  color: UiData.themeColor, fontSize: 20.0),
+        return PreferenceBuilder(
+            preference: PreferenceSettings.getReadContentSteam(),
+            builder: (
+              BuildContext context,
+              List<String> _listData,
+            ) {
+              Set<String> _listReadIdContent = _listData.toSet();
+
+              return Container(
+                padding: EdgeInsets.only(
+                  top: 20.0,
+                  left: 8.0,
+                  right: 8.0,
+                  bottom: 8.0,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height / 1.5,
+                  ),
+                  child: SingleChildScrollView(
+                    child: SafeArea(
+                      child: Wrap(
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 8.0,
+                              right: 8.0,
+                            ),
+                            child: Stack(
+                              children: [
+                                Align(
+                                  heightFactor: 1.5,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'เนื้อหา',
+                                    style: TextStyle(
+                                        color: UiData.themeColor,
+                                        fontSize: 20.0),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  heightFactor: 1.0,
+                                  child: IconButton(
+                                    splashRadius: 20.0,
+                                    icon: Icon(Icons.close),
+                                    iconSize: 26.0,
+                                    onPressed: () => {
+                                      Navigator.of(context).pop(),
+                                    },
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            heightFactor: 1.0,
-                            child: IconButton(
-                              splashRadius: 20.0,
-                              icon: Icon(Icons.close),
-                              iconSize: 26.0,
-                              onPressed: () => {
-                                Navigator.of(context).pop(),
-                              },
-                              color: Colors.red,
-                            ),
+                          Divider(),
+                          Column(
+                            children: listContent
+                                .map(
+                                  (contentData) => Column(
+                                    children: [
+                                      Ink(
+                                        color: activeId == contentData.id
+                                            ? Colors.green
+                                            : Colors.transparent,
+                                        child: ListTile(
+                                          selected: true,
+                                          leading: Badge(
+                                            showBadge: _listReadIdContent
+                                                    .where((element) =>
+                                                        element ==
+                                                        contentData.id)
+                                                    .toList()
+                                                    .isEmpty
+                                                ? true
+                                                : false,
+                                            animationType:
+                                                BadgeAnimationType.scale,
+                                            position: BadgePosition.topRight(
+                                                top: 0.0, right: 0.0),
+                                            child: ClipOval(
+                                              child: Material(
+                                                color:
+                                                    activeId == contentData.id
+                                                        ? Colors.white
+                                                        : Colors.blue,
+                                                child: SizedBox(
+                                                  width: 40.0,
+                                                  height: 40.0,
+                                                  child: Icon(
+                                                    contentData.icon,
+                                                    color: activeId ==
+                                                            contentData.id
+                                                        ? Colors.green
+                                                        : Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          title: Text(
+                                            activeId == contentData.id
+                                                ? contentData.topic +
+                                                    ' (ดูอยู่ตอนนี้)'
+                                                : contentData.topic,
+                                            style: TextStyle(
+                                                color:
+                                                    activeId == contentData.id
+                                                        ? Colors.white
+                                                        : Colors.black54),
+                                          ),
+                                          onTap: () => {
+                                            activeId == contentData.id
+                                                ? Navigator.pop(context)
+                                                : canPop
+                                                    ? hasTransition
+                                                        ? Navigator.pushNamed(
+                                                            context,
+                                                            UiData.contentTag,
+                                                            arguments:
+                                                                contentData.id,
+                                                          )
+                                                        : Navigator
+                                                            .pushAndRemoveUntil(
+                                                            context,
+                                                            PageRouteBuilder(
+                                                              settings: RouteSettings(
+                                                                  arguments:
+                                                                      contentData
+                                                                          .id),
+                                                              pageBuilder: (context,
+                                                                      animation,
+                                                                      anotherAnimation) =>
+                                                                  ContentPage(),
+                                                              transitionDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          0),
+                                                            ),
+                                                            ModalRoute.withName(
+                                                              UiData.homeTag,
+                                                            ),
+                                                          )
+                                                    : hasTransition
+                                                        ? Navigator
+                                                            .pushNamedAndRemoveUntil(
+                                                            context,
+                                                            UiData.contentTag,
+                                                            ModalRoute.withName(
+                                                              UiData.homeTag,
+                                                            ),
+                                                            arguments:
+                                                                contentData.id,
+                                                          )
+                                                        : Navigator
+                                                            .pushAndRemoveUntil(
+                                                            context,
+                                                            PageRouteBuilder(
+                                                              settings: RouteSettings(
+                                                                  arguments:
+                                                                      contentData
+                                                                          .id),
+                                                              pageBuilder: (context,
+                                                                      animation,
+                                                                      anotherAnimation) =>
+                                                                  ContentPage(),
+                                                              transitionDuration:
+                                                                  Duration(
+                                                                      milliseconds:
+                                                                          0),
+                                                            ),
+                                                            ModalRoute.withName(
+                                                              UiData.homeTag,
+                                                            ),
+                                                          ),
+                                          },
+                                        ),
+                                      ),
+                                      Divider(),
+                                    ],
+                                  ),
+                                )
+                                .toList(),
                           ),
                         ],
                       ),
                     ),
-                    Divider(),
-                    Column(
-                      children: listContent
-                          .map(
-                            (contentData) => Column(
-                              children: [
-                                Ink(
-                                  color: activeId == contentData.id
-                                      ? Colors.green
-                                      : Colors.transparent,
-                                  child: ListTile(
-                                    selected: true,
-                                    leading: Badge(
-                                      showBadge: readIdContents
-                                              .where((element) =>
-                                                  element == contentData.id)
-                                              .toList()
-                                              .isEmpty
-                                          ? true
-                                          : false,
-                                      animationType: BadgeAnimationType.scale,
-                                      position: BadgePosition.topRight(
-                                          top: 0.0, right: 0.0),
-                                      child: ClipOval(
-                                        child: Material(
-                                          color: activeId == contentData.id
-                                              ? Colors.white
-                                              : Colors.blue,
-                                          child: SizedBox(
-                                            width: 40.0,
-                                            height: 40.0,
-                                            child: Icon(
-                                              contentData.icon,
-                                              color: activeId == contentData.id
-                                                  ? Colors.green
-                                                  : Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    title: Text(
-                                      activeId == contentData.id
-                                          ? contentData.topic +
-                                              ' (ดูอยู่ตอนนี้)'
-                                          : contentData.topic,
-                                      style: TextStyle(
-                                          color: activeId == contentData.id
-                                              ? Colors.white
-                                              : Colors.black54),
-                                    ),
-                                    onTap: () => {
-                                      activeId == contentData.id
-                                          ? Navigator.pop(context)
-                                          : canPop
-                                              ? hasTransition
-                                                  ? Navigator.pushNamed(
-                                                      context,
-                                                      UiData.contentTag,
-                                                      arguments: contentData.id,
-                                                    )
-                                                  : Navigator
-                                                      .pushAndRemoveUntil(
-                                                      context,
-                                                      PageRouteBuilder(
-                                                        settings: RouteSettings(
-                                                            arguments:
-                                                                contentData.id),
-                                                        pageBuilder: (context,
-                                                                animation,
-                                                                anotherAnimation) =>
-                                                            ContentPage(),
-                                                        transitionDuration:
-                                                            Duration(
-                                                                milliseconds:
-                                                                    0),
-                                                      ),
-                                                      ModalRoute.withName(
-                                                        UiData.homeTag,
-                                                      ),
-                                                    )
-                                              : hasTransition
-                                                  ? Navigator
-                                                      .pushNamedAndRemoveUntil(
-                                                      context,
-                                                      UiData.contentTag,
-                                                      ModalRoute.withName(
-                                                        UiData.homeTag,
-                                                      ),
-                                                      arguments: contentData.id,
-                                                    )
-                                                  : Navigator
-                                                      .pushAndRemoveUntil(
-                                                      context,
-                                                      PageRouteBuilder(
-                                                        settings: RouteSettings(
-                                                            arguments:
-                                                                contentData.id),
-                                                        pageBuilder: (context,
-                                                                animation,
-                                                                anotherAnimation) =>
-                                                            ContentPage(),
-                                                        transitionDuration:
-                                                            Duration(
-                                                                milliseconds:
-                                                                    0),
-                                                      ),
-                                                      ModalRoute.withName(
-                                                        UiData.homeTag,
-                                                      ),
-                                                    ),
-                                    },
-                                  ),
-                                ),
-                                Divider(),
-                              ],
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-        );
+              );
+            });
       },
     );
   }
