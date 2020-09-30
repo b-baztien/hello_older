@@ -41,7 +41,8 @@ class _UsernameWidgetState extends State<UsernameWidget> {
                     icon: Icon(_name.isEmpty ? Icons.add : Icons.edit),
                     color: widget.fontColor,
                     splashRadius: 20.0,
-                    onPressed: () => createAlertDialog(context)),
+                    onPressed: () =>
+                        createAlertDialog(context, oldName: _name)),
               ],
             ),
           );
