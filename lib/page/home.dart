@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hello_older/model/score.dart';
 import 'package:hello_older/util/custom-decision-dialog.dart';
-import 'package:hello_older/util/custom-form-dialog.dart';
+import 'package:hello_older/util/preference-setting.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/widget/username-widget.dart';
+import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 class HomePage extends StatefulWidget {
@@ -25,16 +26,10 @@ class _HomePageState extends State<HomePage> {
   ChewieController _chewieController;
   DateTime currentBackPressTime;
 
-  String _name = '';
-  Set<String> _listReadIdContent;
-  int _countIdContentBadge = 0;
-
   bool _isPostTested;
 
   @override
   void initState() {
-    initialUserName();
-    initialReadIdContent();
     initialIsPostTested();
 
     _controller = VideoPlayerController.asset(
@@ -68,53 +63,11 @@ class _HomePageState extends State<HomePage> {
     _chewieController.dispose();
   }
 
-  initialUserName() async {
-    String name = await UiData.getUserName();
-    setState(() {
-      _name = name;
-    });
-  }
-
-  initialReadIdContent() async {
-    Set<String> listReadIdContent = await UiData.getReadContent();
-    setState(() {
-      _listReadIdContent = listReadIdContent;
-      _countIdContentBadge =
-          UiData.listContent.length - _listReadIdContent.length;
-    });
-  }
-
-  initialIsPostTested() async {
-    bool isPostTest = await UiData.isPostTested();
+  initialIsPostTested() {
+    bool isPostTest = PreferenceSettings.getPostTested();
     setState(() {
       _isPostTested = isPostTest;
     });
-  }
-
-  Future<void> createAlertDialog(BuildContext context) async {
-    String newName;
-    newName = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.face,
-        title: "แก้ไขชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-        initInput: _name,
-      ),
-    );
-
-    if (newName != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, newName);
-      await initialUserName();
-
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-
-      _scaffoldKey.currentState.showSnackBar(
-        UiData.successSnackBar('แก้ไขชื่อสำเร็จแล้ว'),
-      );
-    }
   }
 
   Future<void> createDialog(BuildContext context) async {
@@ -136,6 +89,23 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
+      appBar: AppBar(
+        leading: Icon(
+          Icons.home,
+          color: Colors.white,
+          size: 30.0,
+        ),
+        title: Text(
+          'หน้าหลัก',
+          style: TextStyle(fontSize: 20.0, color: Colors.white),
+        ),
+        actions: [
+          UsernameWidget(
+            fontColor: Colors.white,
+          ),
+        ],
+        backgroundColor: UiData.themeMaterialColor,
+      ),
       body: WillPopScope(
           child: Container(
             decoration: BoxDecoration(
@@ -146,71 +116,9 @@ class _HomePageState extends State<HomePage> {
             ),
             child: Stack(
               children: <Widget>[
-                Column(
-                  children: <Widget>[
-                    Expanded(
-                      child: Container(color: UiData.themeMaterialColor),
-                      flex: 1,
-                    ),
-                    Expanded(
-                      child: Container(color: Colors.transparent),
-                      flex: 10,
-                    ),
-                  ],
-                ),
                 Container(
                   child: Column(
                     children: [
-                      ListTile(
-                        contentPadding:
-                            EdgeInsets.only(left: 20, right: 20, top: 20),
-                        title: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Icon(
-                                Icons.home,
-                                color: Colors.white,
-                                size: 30.0,
-                              ),
-                            ),
-                            Text(
-                              'หน้าหลัก',
-                              style: TextStyle(
-                                  fontSize: 20.0, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        trailing: Visibility(
-                          visible: _name != null && _name.isNotEmpty,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'สวัสดี คุณ$_name',
-                                style: TextStyle(
-                                  fontSize: 14.0,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              IconButton(
-                                  icon: Icon(Icons.edit),
-                                  color: Colors.white,
-                                  splashRadius: 20.0,
-                                  onPressed: () => createAlertDialog(context)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 20.0),
-                        child: Text(
-                          'เมนู',
-                          style: TextStyle(
-                              color: UiData.themeColor, fontSize: 25.0),
-                        ),
-                      ),
                       Divider(
                         indent: 20.0,
                         endIndent: 20.0,
@@ -243,43 +151,54 @@ class _HomePageState extends State<HomePage> {
                                     context,
                                     UiData.objectiveTag,
                                   ),
-                                  await initialReadIdContent(),
                                 },
                                 image: 'assets/images/44126.png',
                               ),
-                              Badge(
-                                padding: EdgeInsets.all(10.0),
-                                badgeContent: Text(
-                                  _countIdContentBadge.toString(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20.0,
-                                  ),
-                                ),
-                                showBadge:
-                                    _countIdContentBadge > 0 ? true : false,
-                                position: BadgePosition.topRight(
-                                  top: -20.0,
-                                  right: 5.0,
-                                ),
-                                borderRadius: 50.0,
-                                animationType: BadgeAnimationType.slide,
-                                child: cardMenuWidget(
-                                  UiData.themeMaterialColor,
-                                  Colors.white,
-                                  'เนื้อหาการเรียนรู้',
-                                  () async {
-                                    await UiData.contentBottomSheet(
-                                      context,
-                                      UiData.listContent,
-                                      _listReadIdContent,
-                                    );
+                              PreferenceBuilder(
+                                  preference:
+                                      PreferenceSettings.getReadContentSteam(),
+                                  builder: (
+                                    BuildContext context,
+                                    List<String> _listData,
+                                  ) {
+                                    Set<String> _listReadIdContent =
+                                        _listData.toSet();
+                                    int _countIdContentBadge =
+                                        UiData.listContent.length -
+                                            _listReadIdContent.length;
 
-                                    await initialReadIdContent();
-                                  },
-                                  image: 'assets/images/5946.png',
-                                ),
-                              ),
+                                    return Badge(
+                                      padding: EdgeInsets.all(10.0),
+                                      badgeContent: Text(
+                                        _countIdContentBadge.toString(),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20.0,
+                                        ),
+                                      ),
+                                      showBadge: _countIdContentBadge > 0
+                                          ? true
+                                          : false,
+                                      position: BadgePosition.topRight(
+                                        top: -20.0,
+                                        right: 5.0,
+                                      ),
+                                      borderRadius: 50.0,
+                                      animationType: BadgeAnimationType.slide,
+                                      child: cardMenuWidget(
+                                        UiData.themeMaterialColor,
+                                        Colors.white,
+                                        'เนื้อหาการเรียนรู้',
+                                        () async {
+                                          await UiData.contentBottomSheet(
+                                            context,
+                                            UiData.listContent,
+                                          );
+                                        },
+                                        image: 'assets/images/5946.png',
+                                      ),
+                                    );
+                                  }),
                               cardMenuWidget(
                                 UiData.themeMaterialColor,
                                 Colors.white,
@@ -293,81 +212,97 @@ class _HomePageState extends State<HomePage> {
                                 },
                                 image: 'assets/images/48.png',
                               ),
-                              _isPostTested
-                                  ? cardMenuWidget(
-                                      UiData.themeMaterialColor,
-                                      Colors.white,
-                                      'แบบทดสอบการเรียนรู้',
-                                      () {
-                                        Score _score = new Score(
-                                          topicScore: 'แบบทดสอบการเรียนรู้',
-                                          score: 0,
-                                          saveScoreFn: () => {},
-                                        );
-                                        Navigator.pushNamed(
-                                          context,
-                                          UiData.examTag,
-                                          arguments: _score,
-                                        );
-                                      },
-                                      image: 'assets/images/3297140.png',
-                                    )
-                                  : Badge(
-                                      animationType: BadgeAnimationType.scale,
-                                      shape: BadgeShape.square,
-                                      badgeColor: _countIdContentBadge == 0
-                                          ? Colors.green
-                                          : Colors.red,
-                                      padding: EdgeInsets.only(
-                                        top: 5.0,
-                                        bottom: 5.0,
-                                        left: 10.0,
-                                        right: 10.0,
-                                      ),
-                                      position: BadgePosition.topRight(
-                                          top: -10.0, right: 0.0),
-                                      borderRadius: 20,
-                                      badgeContent: _countIdContentBadge == 0
-                                          ? Text(
-                                              'สามารถสอบได้',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : Text(
-                                              'ไม่สามารถดำเนินการได้',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
+                              PreferenceBuilder(
+                                  preference:
+                                      PreferenceSettings.getReadContentSteam(),
+                                  builder: (
+                                    BuildContext context,
+                                    List<String> _listData,
+                                  ) {
+                                    Set<String> _listReadIdContent =
+                                        _listData.toSet();
+                                    int _countIdContentBadge =
+                                        UiData.listContent.length -
+                                            _listReadIdContent.length;
+
+                                    return _isPostTested
+                                        ? cardMenuWidget(
+                                            UiData.themeMaterialColor,
+                                            Colors.white,
+                                            'แบบทดสอบการเรียนรู้',
+                                            () {
+                                              Score _score = new Score(
+                                                topicScore:
+                                                    'แบบทดสอบการเรียนรู้',
+                                                score: 0,
+                                                saveScoreFn: () => {},
+                                              );
+                                              Navigator.pushNamed(
+                                                context,
+                                                UiData.examTag,
+                                                arguments: _score,
+                                              );
+                                            },
+                                            image: 'assets/images/3297140.png',
+                                          )
+                                        : Badge(
+                                            animationType:
+                                                BadgeAnimationType.scale,
+                                            shape: BadgeShape.square,
+                                            badgeColor:
+                                                _countIdContentBadge == 0
+                                                    ? Colors.green
+                                                    : Colors.red,
+                                            padding: EdgeInsets.only(
+                                              top: 5.0,
+                                              bottom: 5.0,
+                                              left: 10.0,
+                                              right: 10.0,
                                             ),
-                                      child: cardMenuWidget(
-                                        UiData.themeMaterialColor,
-                                        Colors.white,
-                                        'แบบทดสอบหลังเรียน',
-                                        () {
-                                          if (_countIdContentBadge == 0) {
-                                            Score _score = new Score(
-                                              topicScore: 'แบบทดสอบหลังเรียน',
-                                              saveScoreFn: () async {
-                                                SharedPreferences
-                                                    sharedPreferences =
-                                                    await SharedPreferences
-                                                        .getInstance();
-                                                sharedPreferences.setBool(
-                                                    UiData.postTestedKey, true);
+                                            position: BadgePosition.topRight(
+                                                top: -10.0, right: 0.0),
+                                            borderRadius: 20,
+                                            badgeContent:
+                                                _countIdContentBadge == 0
+                                                    ? Text(
+                                                        'สามารถสอบได้',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                        ),
+                                                      )
+                                                    : Text(
+                                                        'ไม่สามารถดำเนินการได้',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                            child: cardMenuWidget(
+                                              UiData.themeMaterialColor,
+                                              Colors.white,
+                                              'แบบทดสอบหลังเรียน',
+                                              () {
+                                                if (_countIdContentBadge == 0) {
+                                                  Score _score = new Score(
+                                                    topicScore:
+                                                        'แบบทดสอบหลังเรียน',
+                                                    saveScoreFn: () {
+                                                      PreferenceSettings
+                                                          .setPostTested(true);
+                                                    },
+                                                    score: 0,
+                                                  );
+                                                  Navigator.pushNamed(
+                                                      context, UiData.examTag,
+                                                      arguments: _score);
+                                                } else {
+                                                  createDialog(context);
+                                                }
                                               },
-                                              score: 0,
-                                            );
-                                            Navigator.pushNamed(
-                                                context, UiData.examTag,
-                                                arguments: _score);
-                                          } else {
-                                            createDialog(context);
-                                          }
-                                        },
-                                        image: 'assets/images/3297140.png',
-                                      ),
-                                    ),
+                                              image:
+                                                  'assets/images/3297140.png',
+                                            ),
+                                          );
+                                  }),
                               cardMenuWidget(
                                 UiData.themeMaterialColor,
                                 Colors.white,

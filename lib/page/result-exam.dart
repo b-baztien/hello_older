@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hello_older/model/score.dart';
-import 'package:hello_older/util/custom-form-dialog.dart';
+import 'package:hello_older/util/preference-setting.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/widget/username-widget.dart';
 import 'package:styled_text/styled_text.dart';
 
 class ResultExamPage extends StatefulWidget {
@@ -14,8 +14,6 @@ class ResultExamPage extends StatefulWidget {
 }
 
 class _ResultExamPageState extends State<ResultExamPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   String _name = '';
   Score _score;
   int _pretestScore;
@@ -25,65 +23,31 @@ class _ResultExamPageState extends State<ResultExamPage> {
   @override
   void initState() {
     super.initState();
-    initialUserName();
     initialIsFirstTimeExam();
     initialIsPostTested();
   }
 
-  initialUserName() async {
-    String name = await UiData.getUserName();
-    setState(() {
-      _name = name;
-    });
-  }
-
-  initialIsFirstTimeExam() async {
-    bool isFirstTime = await UiData.isFirstTimeExam();
+  initialIsFirstTimeExam() {
+    bool isFirstTime = PreferenceSettings.getFirstTime();
     setState(() {
       _firstTime = isFirstTime;
     });
   }
 
-  initialIsPostTested() async {
-    bool isPostTested = await UiData.isPostTested();
+  initialIsPostTested() {
+    bool isPostTested = PreferenceSettings.getPostTested();
     setState(() {
       _isPostTested = isPostTested;
     });
   }
 
-  initialScore() async {
+  initialScore() {
     _score = ModalRoute.of(context).settings.arguments;
 
-    int pretestScore = await UiData.getPretestScore();
+    int pretestScore = PreferenceSettings.getPretestScore();
     setState(() {
       _pretestScore = pretestScore;
     });
-  }
-
-  Future<void> createAlertDialog(BuildContext context) async {
-    String newName;
-    newName = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.face,
-        title: "แก้ไขชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-        initInput: _name,
-      ),
-    );
-
-    if (newName != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, newName);
-      await initialUserName();
-
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-
-      _scaffoldKey.currentState.showSnackBar(
-        UiData.successSnackBar('แก้ไขชื่อสำเร็จแล้ว'),
-      );
-    }
   }
 
   onSaveScoreFn() {
@@ -113,31 +77,7 @@ class _ResultExamPageState extends State<ResultExamPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Visibility(
-                visible: _name != null && _name.isNotEmpty,
-                child: Align(
-                  heightFactor: 1.0,
-                  alignment: Alignment.topRight,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        'สวัสดี คุณ$_name',
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        color: Colors.black87,
-                        splashRadius: 20.0,
-                        onPressed: () => createAlertDialog(context),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              UsernameWidget(),
               Flexible(
                 flex: 2,
                 child: Container(

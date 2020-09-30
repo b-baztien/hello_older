@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hello_older/model/score.dart';
 import 'package:hello_older/util/custom-form-dialog.dart';
+import 'package:hello_older/util/preference-setting.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/widget/username-widget.dart';
 
 class ObjectivePage extends StatefulWidget {
   static String tag = 'objective-page';
@@ -15,26 +16,23 @@ class ObjectivePage extends StatefulWidget {
 class _ObjectivePageState extends State<ObjectivePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  String _name;
   bool _isFirstTime;
 
   @override
   void initState() {
     super.initState();
-    initialData();
+    initialFirstTime();
   }
 
-  initialData() async {
-    String name = await UiData.getUserName();
-    bool isFirstTime = await UiData.isFirstTimeExam();
+  initialFirstTime() {
+    bool isFirstTime = PreferenceSettings.getFirstTime();
     setState(() {
-      _name = name;
       _isFirstTime = isFirstTime;
     });
   }
 
   Future<void> createAlertDialog(BuildContext context) async {
-    _name = await showDialog(
+    String newName = await showDialog(
       context: context,
       builder: (BuildContext context) => CustomFormDialog(
         titleIcon: Icons.person_add,
@@ -44,9 +42,14 @@ class _ObjectivePageState extends State<ObjectivePage> {
       ),
     );
 
-    if (_name != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, _name);
+    if (newName != null) {
+      PreferenceSettings.setUserNameStream(newName);
+
+      _scaffoldKey.currentState.hideCurrentSnackBar();
+      _scaffoldKey.currentState.showSnackBar(
+        UiData.successSnackBar('เพิ่มชื่อสำเร็จแล้ว'),
+      );
+
       goToPreTest();
     }
   }
@@ -55,11 +58,9 @@ class _ObjectivePageState extends State<ObjectivePage> {
     Score _score = new Score(
       topicScore: 'แบบทดสอบก่อนเรียน',
       score: 0,
-      saveScoreFn: (int score) async {
-        SharedPreferences sharedPreferences =
-            await SharedPreferences.getInstance();
-        sharedPreferences.setInt(UiData.preTestScoreKey, score);
-        sharedPreferences.setBool(UiData.postTestedKey, false);
+      saveScoreFn: (int score) {
+        PreferenceSettings.setPretestScore(score);
+        PreferenceSettings.setPostTested(false);
       },
     );
 
@@ -68,35 +69,10 @@ class _ObjectivePageState extends State<ObjectivePage> {
         arguments: _score);
   }
 
-  Future<void> editNameDilog(BuildContext context) async {
-    String newName;
-    newName = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.face,
-        title: "แก้ไขชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-        initInput: _name,
-      ),
-    );
-
-    if (newName != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, newName);
-      await initialData();
-
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-
-      _scaffoldKey.currentState.showSnackBar(
-        UiData.successSnackBar('แก้ไขชื่อสำเร็จแล้ว'),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
       body: Container(
         decoration: BoxDecoration(
@@ -113,30 +89,7 @@ class _ObjectivePageState extends State<ObjectivePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Visibility(
-                    visible: _name != null && _name.isNotEmpty,
-                    child: Align(
-                      heightFactor: 1.0,
-                      alignment: Alignment.topRight,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'สวัสดี คุณ$_name',
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          IconButton(
-                              icon: Icon(Icons.edit),
-                              color: Colors.black87,
-                              splashRadius: 20.0,
-                              onPressed: () => editNameDilog(context)),
-                        ],
-                      ),
-                    ),
-                  ),
+                  UsernameWidget(),
                   Expanded(
                     flex: 2,
                     child: Container(
@@ -190,12 +143,20 @@ class _ObjectivePageState extends State<ObjectivePage> {
                       ),
                       color: UiData.themeColor,
                       icon: Icon(
-                        _name == null || _isFirstTime ? Icons.done : Icons.home,
+                        PreferenceSettings.getUserNameStream()
+                                    .getValue()
+                                    .isEmpty ||
+                                _isFirstTime
+                            ? Icons.done
+                            : Icons.home,
                         color: Colors.white,
                         size: 25,
                       ),
                       label: Text(
-                        _name == null || _isFirstTime
+                        PreferenceSettings.getUserNameStream()
+                                    .getValue()
+                                    .isEmpty ||
+                                _isFirstTime
                             ? 'เข้าใจแล้ว'
                             : 'กลับหน้าหลัก',
                         style: TextStyle(
@@ -204,7 +165,9 @@ class _ObjectivePageState extends State<ObjectivePage> {
                             fontWeight: FontWeight.normal),
                       ),
                       onPressed: () => {
-                        if (_name == null)
+                        if (PreferenceSettings.getUserNameStream()
+                            .getValue()
+                            .isEmpty)
                           {
                             createAlertDialog(context),
                           }

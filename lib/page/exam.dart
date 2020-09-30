@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hello_older/model/score.dart';
-import 'package:hello_older/util/custom-form-dialog.dart';
+import 'package:hello_older/util/preference-setting.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/widget/username-widget.dart';
 import 'package:styled_text/styled_text.dart';
 
 class ExamPage extends StatefulWidget {
@@ -17,49 +17,20 @@ class ExamPage extends StatefulWidget {
 class _ExamPageState extends State<ExamPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  String _name;
   bool _firstTime;
   Score _score;
 
   @override
   void initState() {
     super.initState();
-    initialData();
+    initialFirstTimeExam();
   }
 
-  initialData() async {
-    String name = await UiData.getUserName();
-    bool isFirstTime = await UiData.isFirstTimeExam();
+  initialFirstTimeExam() {
+    bool isFirstTime = PreferenceSettings.getFirstTime();
     setState(() {
       _firstTime = isFirstTime;
-      _name = name;
     });
-  }
-
-  Future<void> createAlertDialog(BuildContext context) async {
-    String newName;
-    newName = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.face,
-        title: "แก้ไขชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-        initInput: _name,
-      ),
-    );
-
-    if (newName != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, newName);
-      await initialData();
-
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-
-      _scaffoldKey.currentState.showSnackBar(
-        UiData.successSnackBar('แก้ไขชื่อสำเร็จแล้ว'),
-      );
-    }
   }
 
   @override
@@ -84,30 +55,7 @@ class _ExamPageState extends State<ExamPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Visibility(
-                    visible: _name != null && _name.isNotEmpty,
-                    child: Align(
-                      heightFactor: 1.0,
-                      alignment: Alignment.topRight,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'สวัสดี คุณ$_name',
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          IconButton(
-                              icon: Icon(Icons.edit),
-                              color: Colors.black87,
-                              splashRadius: 20.0,
-                              onPressed: () => createAlertDialog(context)),
-                        ],
-                      ),
-                    ),
-                  ),
+                  UsernameWidget(),
                   Expanded(
                     flex: 2,
                     child: Container(

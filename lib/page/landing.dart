@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hello_older/util/preference-setting.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LandingPage extends StatefulWidget {
   @override
@@ -11,17 +11,13 @@ class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
-    _loadFirstTimeAppOpen();
   }
 
   _loadFirstTimeAppOpen() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String name = prefs.getString(UiData.nameKey);
-    bool isFirstTime = prefs.getBool(UiData.firstTimeKey);
-    if (name != null &&
-        isFirstTime != null &&
-        name.isNotEmpty &&
-        !isFirstTime) {
+    await PreferenceSettings.initPreference();
+    String name = PreferenceSettings.getUserNameStream().getValue();
+    bool isFirstTime = PreferenceSettings.getFirstTime();
+    if (isFirstTime != null && name.isNotEmpty && !isFirstTime) {
       // Not first time
       Navigator.pushNamedAndRemoveUntil(
         context,
@@ -32,13 +28,14 @@ class _LandingPageState extends State<LandingPage> {
       Navigator.pushNamedAndRemoveUntil(
         context,
         UiData.objectiveTag,
-        ModalRoute.withName(UiData.objectiveTag),
+        ModalRoute.withName(UiData.homeTag),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _loadFirstTimeAppOpen();
     return Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

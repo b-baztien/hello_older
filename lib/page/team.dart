@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hello_older/util/custom-form-dialog.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/widget/username-widget.dart';
 import 'package:styled_text/styled_text.dart';
 
 class TeamPage extends StatefulWidget {
@@ -13,67 +12,9 @@ class TeamPage extends StatefulWidget {
 }
 
 class _TeamPageState extends State<TeamPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  String _name;
   @override
   void initState() {
     super.initState();
-    initialUserName();
-  }
-
-  initialUserName() async {
-    String name = await UiData.getUserName();
-    setState(() {
-      _name = name;
-    });
-  }
-
-  Future<void> createAlertDialog(BuildContext context) async {
-    _name = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.person_add,
-        title: "กรุณากรอกชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-      ),
-    );
-
-    if (_name != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, _name);
-
-      Navigator.pushNamedAndRemoveUntil(
-          context, UiData.examTag, ModalRoute.withName(UiData.examTag),
-          arguments: 'แบบทดสอบก่อนเรียน');
-    }
-  }
-
-  Future<void> editNameDilog(BuildContext context) async {
-    String newName;
-    newName = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.face,
-        title: "แก้ไขชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-        initInput: _name,
-      ),
-    );
-
-    if (newName != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, newName);
-      await initialUserName();
-
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-
-      _scaffoldKey.currentState.showSnackBar(
-        UiData.successSnackBar('แก้ไขชื่อสำเร็จแล้ว'),
-      );
-    }
   }
 
   @override
@@ -95,30 +36,7 @@ class _TeamPageState extends State<TeamPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Visibility(
-                    visible: _name != null && _name.isNotEmpty,
-                    child: Align(
-                      heightFactor: 1.0,
-                      alignment: Alignment.topRight,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'สวัสดี คุณ$_name',
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          IconButton(
-                              icon: Icon(Icons.edit),
-                              color: Colors.black87,
-                              splashRadius: 20.0,
-                              onPressed: () => editNameDilog(context)),
-                        ],
-                      ),
-                    ),
-                  ),
+                  UsernameWidget(),
                   Expanded(
                     flex: 2,
                     child: Container(
@@ -182,27 +100,20 @@ class _TeamPageState extends State<TeamPage> {
                       ),
                       color: UiData.themeColor,
                       icon: Icon(
-                        _name == null ? Icons.done : Icons.home,
+                        Icons.home,
                         color: Colors.white,
                         size: 25,
                       ),
                       label: Text(
-                        _name == null ? 'เข้าใจแล้ว' : 'กลับหน้าหลัก',
+                        'กลับหน้าหลัก',
                         style: TextStyle(
                             fontSize: 16,
                             color: Colors.white,
                             fontWeight: FontWeight.normal),
                       ),
                       onPressed: () => {
-                        if (_name == null)
-                          {
-                            createAlertDialog(context),
-                          }
-                        else
-                          {
-                            Navigator.of(context)
-                                .popUntil((route) => route.isFirst),
-                          }
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst),
                       },
                     ),
                   ),

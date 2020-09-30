@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hello_older/model/score.dart';
 import 'package:hello_older/model/take-exam.dart';
-import 'package:hello_older/util/custom-form-dialog.dart';
+import 'package:hello_older/util/preference-setting.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/widget/username-widget.dart';
 import 'package:styled_text/styled_text.dart';
 
 class TakeExamPage extends StatefulWidget {
@@ -18,7 +18,6 @@ class TakeExamPage extends StatefulWidget {
 class _TakeExamPageState extends State<TakeExamPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  String _name;
   int _choiceNo;
   TakeExam takeExam;
   List<String> _listAnswer;
@@ -26,49 +25,14 @@ class _TakeExamPageState extends State<TakeExamPage> {
 
   @override
   void initState() {
-    _name = '';
     _choiceNo = 1;
     takeExam = new TakeExam(isRandomChoice: false);
     _listAnswer = new List.generate(10, (index) => '');
-    initialUserName();
     super.initState();
-  }
-
-  initialUserName() async {
-    String name = await UiData.getUserName();
-    setState(() {
-      _name = name;
-    });
   }
 
   initialScoreName() async {
     _score = ModalRoute.of(context).settings.arguments;
-  }
-
-  Future<void> createAlertDialog(BuildContext context) async {
-    String newName;
-    newName = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.face,
-        title: "แก้ไขชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-        initInput: _name,
-      ),
-    );
-
-    if (newName != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, newName);
-      await initialUserName();
-
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-
-      _scaffoldKey.currentState.showSnackBar(
-        UiData.successSnackBar('แก้ไขชื่อสำเร็จแล้ว'),
-      );
-    }
   }
 
   @override
@@ -91,30 +55,7 @@ class _TakeExamPageState extends State<TakeExamPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Visibility(
-                visible: _name != null && _name.isNotEmpty,
-                child: Align(
-                  heightFactor: 1.0,
-                  alignment: Alignment.topRight,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        'สวัสดี คุณ$_name',
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      IconButton(
-                          icon: Icon(Icons.edit),
-                          color: Colors.black87,
-                          splashRadius: 20.0,
-                          onPressed: () => createAlertDialog(context)),
-                    ],
-                  ),
-                ),
-              ),
+              UsernameWidget(),
               Flexible(
                 flex: 1,
                 child: Text(
@@ -259,9 +200,7 @@ class _TakeExamPageState extends State<TakeExamPage> {
                                   );
 
                                   if (isAnsAll) {
-                                    SharedPreferences prefs =
-                                        await SharedPreferences.getInstance();
-                                    prefs.setBool(UiData.firstTimeKey, false);
+                                    PreferenceSettings.setFirstTime(false);
 
                                     _score.score =
                                         takeExam.calculateScore(_listAnswer);

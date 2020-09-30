@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hello_older/model/content-data.dart';
 import 'package:hello_older/util/custom-decision-dialog.dart';
-import 'package:hello_older/util/custom-form-dialog.dart';
+import 'package:hello_older/util/preference-setting.dart';
 import 'package:hello_older/util/uidata.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hello_older/widget/username-widget.dart';
 import 'package:styled_text/styled_text.dart';
 
 class ContentPage extends StatefulWidget {
@@ -21,7 +21,6 @@ class _ContentPageState extends State<ContentPage>
     with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  String _name;
   bool _firstTime;
   List<ContentData> _listContent;
   ContentData _selectedContent;
@@ -41,8 +40,7 @@ class _ContentPageState extends State<ContentPage>
     _controller = ScrollController();
     _controller.addListener(_scrollListener);
 
-    initialUserName();
-    initialReadIdContent();
+    initialFirstTime();
     initialIsPostTested();
     _initialScrollButton(
       duration: new Duration(seconds: 1),
@@ -84,31 +82,27 @@ class _ContentPageState extends State<ContentPage>
         curve: Curves.linear, duration: Duration(milliseconds: 500));
   }
 
-  initialUserName() async {
-    String name = await UiData.getUserName();
-    bool isFirstTime = await UiData.isFirstTimeExam();
+  initialFirstTime() {
+    bool isFirstTime = PreferenceSettings.getFirstTime();
     setState(() {
       _firstTime = isFirstTime;
-      _name = name;
     });
   }
 
-  initialIsPostTested() async {
-    bool isPostTested = await UiData.isPostTested();
+  initialIsPostTested() {
+    bool isPostTested = PreferenceSettings.getPostTested();
     setState(() {
       _isPostTested = isPostTested;
     });
   }
 
-  initialReadIdContent() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    Set<String> listReadIdContent = await UiData.getReadContent();
+  initialReadIdContent() {
+    Set<String> listReadIdContent =
+        PreferenceSettings.getReadContentSteam().getValue().toSet();
     setState(() {
       _listReadIdContent = listReadIdContent;
-
       _listReadIdContent.add(_selectedContent.id);
-      sharedPreferences.setStringList(
-          UiData.readContentIdKey, _listReadIdContent.toList());
+      PreferenceSettings.setReadContent(_listReadIdContent.toList());
     });
   }
 
@@ -119,32 +113,8 @@ class _ContentPageState extends State<ContentPage>
 
     _selectedContent =
         _listContent.firstWhere((element) => element.id == _contentId);
-  }
 
-  Future<void> createAlertDialog(BuildContext context) async {
-    String newName;
-    newName = await showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomFormDialog(
-        titleIcon: Icons.face,
-        title: "แก้ไขชื่อของคุณ",
-        labelText: 'ชื่อของคุณ',
-        buttonText: "ตกลง",
-        initInput: _name,
-      ),
-    );
-
-    if (newName != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(UiData.nameKey, newName);
-      await initialUserName();
-
-      _scaffoldKey.currentState.hideCurrentSnackBar();
-
-      _scaffoldKey.currentState.showSnackBar(
-        UiData.successSnackBar('แก้ไขชื่อสำเร็จแล้ว'),
-      );
-    }
+    initialReadIdContent();
   }
 
   Future<void> createDialog(BuildContext context) async {
@@ -191,30 +161,7 @@ class _ContentPageState extends State<ContentPage>
             children: [
               Column(
                 children: [
-                  Visibility(
-                    visible: _name != null && _name.isNotEmpty,
-                    child: Align(
-                      heightFactor: 1.0,
-                      alignment: Alignment.topRight,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'สวัสดี คุณ$_name',
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          IconButton(
-                              icon: Icon(Icons.edit),
-                              color: Colors.black87,
-                              splashRadius: 20.0,
-                              onPressed: () => createAlertDialog(context)),
-                        ],
-                      ),
-                    ),
-                  ),
+                  UsernameWidget(),
                   Expanded(
                     flex: 4,
                     child: Padding(
@@ -436,7 +383,6 @@ class _ContentPageState extends State<ContentPage>
                       onPressed: () => UiData.contentBottomSheet(
                         context,
                         _listContent,
-                        _listReadIdContent,
                         activeId: _contentId,
                         canPop: false,
                         hasTransition: false,
