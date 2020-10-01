@@ -23,9 +23,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  video_player: ^0.10.12+2
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^0.1.3
+  video_player: ^0.10.12+5
   chewie: ^0.9.10
-  flutter_launcher_icons: ^0.7.5
   styled_text: ^1.0.0
   splashscreen: any
   intl: ^0.16.1
@@ -35,14 +37,16 @@ dependencies:
   badges: ^1.1.1
   streaming_shared_preferences: ^1.0.1
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.3
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.7.5
 
+flutter_icons:
+  image_path: "assets/icon/icon.png"
+  android: true
+  ios: true
+  
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
