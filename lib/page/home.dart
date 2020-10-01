@@ -120,6 +120,14 @@ class _HomePageState extends State<HomePage> {
                 Container(
                   child: Column(
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20.0),
+                        child: Text(
+                          'เมนู',
+                          style: TextStyle(
+                              color: UiData.themeColor, fontSize: 25.0),
+                        ),
+                      ),
                       Divider(
                         indent: 20.0,
                         endIndent: 20.0,
