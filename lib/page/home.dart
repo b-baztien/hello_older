@@ -30,10 +30,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    super.initState();
     initialIsPostTested();
 
-    _controller = VideoPlayerController.asset(
-      "assets/videos/video.mp4",
+    _controller = VideoPlayerController.network(
+      "https://github.com/devilbas07/hello_older/blob/master/assets/videos/video.mp4?raw=true",
     );
 
     _chewieController = ChewieController(
@@ -51,8 +52,6 @@ class _HomePageState extends State<HomePage> {
       autoPlay: false,
       looping: false,
     );
-
-    super.initState();
   }
 
   @override
